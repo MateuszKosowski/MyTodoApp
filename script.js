@@ -11,6 +11,9 @@ class TodoItem {
 }
 
 let todoList = [];
+// TEST PURPOSES ONLY - REPLACE WITH YOUR OWN KEY
+const JSON_BIN_KEY = "";
+const GROQ_KEY = ""
 
 // let initList = () => {
 
@@ -45,7 +48,8 @@ let fetchJSON = (method, body) => {
     const url = method === "GET" ? baseUrl + "/latest" : baseUrl;
 
     req.open(method, url, true);
-    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
+    // Some day this key will be hidden securely
+    req.setRequestHeader("X-Master-Key", JSON_BIN_KEY);
     if (method === "PUT") {
         req.setRequestHeader("Content-Type", "application/json");
     }
@@ -76,12 +80,67 @@ let fetchJSON = (method, body) => {
 
 fetchJSON("GET", null);
 
+let getCategoryFromLLM = async (title, description) => {
+    if (title === undefined || title === null || description === undefined || description === null) {
+        console.error("Title or description is missing.");
+        return null;
+    }
+    const body = {
+        model: "openai/gpt-oss-20b",
+        messages: [
+            {
+                role: "user",
+                content: `
+    You are a task classification assistant.
+
+    Your job is to analyze a to-do task and decide which of the following categories it belongs to:
+
+    - "uczelnia" → tasks related to university, studies, student projects, or exams.
+    - "praca" → tasks related to professional work, company projects, programming, or meetings.
+    - "prywatne" → personal or everyday tasks, hobbies, errands, or private matters.
+
+    Return the result **only** as a valid JSON object, with a single field "category".
+    Do not include any explanation or extra text.
+
+    ---
+
+    Task Title: ${title}
+    Task Description: ${description}
+
+    ---
+
+    Output format:
+    {"category": "<one of: uczelnia, praca, prywatne>"}
+        `
+            }
+        ],
+        temperature: 0.2
+    };
+
+    try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${GROQ_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        const categoryJson = JSON.parse(data.choices[0].message.content);
+        return categoryJson.category;
+    } catch (err) {
+        console.error("Błąd:", err);
+        return null;
+    }
+}
+
 let updateTodoList = () => {
     const todoListBody = document.querySelector(".todoListBody");
     const filterInput = document.querySelector("#inputSearch");
     const filterFromDate = document.querySelector("#filterFromDate");
     const filterToDate = document.querySelector("#filterToDate");
-    
+
     let createItem = (todo) => {
         const newTr = document.createElement("tr");
         for (let key in todo) {
@@ -132,7 +191,7 @@ let createdFilterListener = () => {
     const filterInput = document.querySelector("#inputSearch");
     const filterFromDate = document.querySelector("#filterFromDate");
     const filterToDate = document.querySelector("#filterToDate");
-    
+
     filterInput.addEventListener("input", updateTodoList);
     filterFromDate.addEventListener("input", updateTodoList);
     filterToDate.addEventListener("input", updateTodoList);
@@ -149,7 +208,7 @@ let deleteTodo = (todo) => {
     }
 };
 
-let addTodo = () => {
+let addTodo = async () => {
     const form = document.querySelector(".todoFormView form");
     const { inputTitle, inputDescription, inputPlace, inputDate } = form.elements;
 
@@ -157,6 +216,7 @@ let addTodo = () => {
         title: inputTitle.value,
         description: inputDescription.value,
         place: inputPlace.value,
+        category: await getCategoryFromLLM(inputTitle.value, inputDescription.value),
         dueDate: new Date(inputDate.value)
     });
 
@@ -164,7 +224,7 @@ let addTodo = () => {
     form.reset();
     updateTodoList();
     fetchJSON("PUT", JSON.stringify(todoList));
-    
+
     confetti({
         particleCount: 500,
         spread: 360,
