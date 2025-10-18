@@ -18,7 +18,23 @@
         <label>Search</label>
         <input type="text" id="inputSearch" placeholder="Type Your seach here..." />
     </div>
-    <div class="todoListView"></div>
+    <div class="todoListView">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Place</th>
+                    <th>Category</th>
+                    <th>Due date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="todoListBody">
+                <!-- Todo items will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
     <div class="todoFormView">
         <form>
             <label>Title</label>

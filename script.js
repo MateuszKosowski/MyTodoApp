@@ -77,15 +77,22 @@ let fetchJSON = (method, body) => {
 fetchJSON("GET", null);
 
 let updateTodoList = () => {
-    const todoListDiv = document.querySelector(".todoListView");
+    const todoListBody = document.querySelector(".todoListBody");
     const filterInput = document.querySelector("#inputSearch");
     filterInput.addEventListener("input", updateTodoList);
     
     let createItem = (todo) => {
-        const newDiv = document.createElement("div");
-        const newP = document.createElement("p");
-        newP.textContent = todo.title + " " + todo.description;
-        newDiv.appendChild(newP);
+        const newTr = document.createElement("tr");
+        for (let key in todo) {
+            const newTd = document.createElement("td");
+            if (key === "dueDate") {
+                newTd.textContent = todo[key].toLocaleDateString();
+            }
+            else {
+                newTd.textContent = todo[key];
+            }
+            newTr.appendChild(newTd);
+        }
 
         const newDeleteButton = document.createElement("input");
         newDeleteButton.type = "button";
@@ -95,13 +102,12 @@ let updateTodoList = () => {
                 deleteTodo(todo);
             });
 
-        newDiv.appendChild(newDeleteButton);
-
-        todoListDiv.appendChild(newDiv);
+        newTr.appendChild(newDeleteButton);
+        todoListBody.appendChild(newTr);
     }
 
-    while (todoListDiv.firstChild) {
-        todoListDiv.removeChild(todoListDiv.firstChild);
+    while (todoListBody.firstChild) {
+        todoListBody.removeChild(todoListBody.firstChild);
     }
 
     for (let todo of todoList) {
@@ -114,8 +120,6 @@ let updateTodoList = () => {
             }
         }
     }
-
-    fetchJSON("PUT", JSON.stringify(todoList));
 };
 
 let deleteTodo = (todo) => {
@@ -123,11 +127,11 @@ let deleteTodo = (todo) => {
     if (index > -1) {
         todoList.splice(index, 1);
         updateTodoList();
+        fetchJSON("PUT", JSON.stringify(todoList));
     }
 };
 
 let addTodo = () => {
-
     const form = document.querySelector(".todoFormView form");
     const { inputTitle, inputDescription, inputPlace, inputCategory, inputDate } = form.elements;
 
@@ -142,6 +146,7 @@ let addTodo = () => {
     todoList.push(newTodoItem);
     form.reset();
     updateTodoList();
+    fetchJSON("PUT", JSON.stringify(todoList));
 }
 
 updateTodoList();
