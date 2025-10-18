@@ -39,7 +39,42 @@ let initList = () => {
     }
 };
 
-initList();
+// initList();
+
+let getTodos = () => {
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = () => {
+        if (req.readyState == XMLHttpRequest.DONE) {
+            if (req.status == 200) {
+                let response = JSON.parse(req.responseText);
+                todoList = response.record.map(todo => new TodoItem(todo));
+                updateTodoList();
+            }
+        }
+    };
+
+    req.open("GET", "https://api.jsonbin.io/v3/b/68f38bbcd0ea881f40a9e1cd/latest", true);
+    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
+    req.send();
+}
+
+getTodos();
+
+let updateJSONBin = () => {
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = () => {
+    if (req.readyState == XMLHttpRequest.DONE) {
+        console.log(req.responseText);
+    }
+    };
+
+    req.open("PUT", "https://api.jsonbin.io/v3/b/68f38bbcd0ea881f40a9e1cd", true);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
+    req.send('' + JSON.stringify({ record: todoList }));
+}
 
 let updateTodoList = () => {
     const todoListDiv = document.querySelector(".todoListView");
