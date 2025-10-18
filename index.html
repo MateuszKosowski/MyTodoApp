@@ -15,6 +15,23 @@
 <body>
     <h1>MyNotes</h1>
     <div class="todoListView"></div>
+    <div class="todoFormView">
+        <form>
+            <label>Title</label>
+            <input type="text" id="inputTitle" />
+            <label>Description</label>
+            <input type="text" id="inputDescription" />
+            <label>Place</label>
+            <input type="text" id="inputPlace" />
+            <label>Category</label>
+            <input type="text" id="inputCategory" />
+            <label>Due date</label>
+            <input type="date" id="inputDate" />
+            <input type="button" value="Add new Task" onclick="addTodo()" />
+        </form>
+    </div>
+
+
 </body>
 
 <!-- Jeśli script jest w head to wykonuje się przed załadowaniem body -->

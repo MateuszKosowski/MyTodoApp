@@ -43,13 +43,31 @@ let updateTodoList = () => {
         todoListDiv.removeChild(todoListDiv.firstChild);
     }
 
-    for (let todo in todoList) {
-        let newElement = document.createElement("div");
-        let newContent = document.createTextNode(
-            todoList[todo].title + " " + todoList[todo].description);
-        newElement.appendChild(newContent);
-        todoListDiv.appendChild(newElement);
+    for (let todo of todoList) {
+        const newDiv = document.createElement("div");
+        const newP = document.createElement("p");
+        newP.textContent = todo.title + " " + todo.description;
+        newDiv.appendChild(newP);
+        todoListDiv.appendChild(newDiv);
     }
+
+};
+
+let addTodo = (todo) => {
+
+    const form = document.querySelector(".todoFormView form");
+    const { inputTitle, inputDescription, inputPlace, inputCategory, inputDate } = form.elements;
+
+    const newTodoItem = new TodoItem({
+        title: inputTitle.value,
+        description: inputDescription.value,
+        place: inputPlace.value,
+        category: inputCategory.value,
+        dueDate: new Date(inputDate.value)
+    });
+
+    todoList.push(newTodoItem);
+    updateTodoList();
 }
 
 updateTodoList();
