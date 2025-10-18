@@ -12,69 +12,69 @@ class TodoItem {
 
 let todoList = [];
 
-// Użycie funkcji strzałkowej blokuje możliwość wywołania jej przed deklaracją
-// Jeśli nie potrzebuję, this lub konstruktora to jest prostsza składnia niż funkcja anonimowa
-let initList = () => {
+// let initList = () => {
 
-    let savedList = window.localStorage.getItem("todos");
-    if (savedList != null) {
-        todoList = JSON.parse(savedList);
-    }
-    else {
-        todoList.push(new TodoItem({
-            title: "Learn JS",
-            description: "Create a demo application for my TODO's",
-            place: "445",
-            category: '',
-            dueDate: new Date(2024, 10, 16)
-        }));
+//     let savedList = window.localStorage.getItem("todos");
+//     if (savedList != null) {
+//         todoList = JSON.parse(savedList);
+//     }
+//     else {
+//         todoList.push(new TodoItem({
+//             title: "Learn JS",
+//             description: "Create a demo application for my TODO's",
+//             place: "445",
+//             category: '',
+//             dueDate: new Date(2024, 10, 16)
+//         }));
 
-        todoList.push(new TodoItem({
-            title: "Lecture test",
-            description: "Quick test from the first three lectures",
-            place: "F6",
-            category: '',
-            dueDate: new Date(2024, 10, 17)
-        }));
-    }
-};
+//         todoList.push(new TodoItem({
+//             title: "Lecture test",
+//             description: "Quick test from the first three lectures",
+//             place: "F6",
+//             category: '',
+//             dueDate: new Date(2024, 10, 17)
+//         }));
+//     }
+// };
 
 // initList();
 
-let getTodos = () => {
+let fetchJSON = (method, body) => {
     let req = new XMLHttpRequest();
+    const baseUrl = "https://api.jsonbin.io/v3/b/68f38bbcd0ea881f40a9e1cd";
+    const url = method === "GET" ? baseUrl + "/latest" : baseUrl;
+
+    req.open(method, url, true);
+    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
+    if (method === "PUT") {
+        req.setRequestHeader("Content-Type", "application/json");
+    }
 
     req.onreadystatechange = () => {
-        if (req.readyState == XMLHttpRequest.DONE) {
-            if (req.status == 200) {
-                let response = JSON.parse(req.responseText);
-                todoList = response.record.map(todo => new TodoItem(todo));
-                updateTodoList();
+        if (req.readyState === XMLHttpRequest.DONE) {
+            if (req.status === 200) {
+                if (method === "GET") {
+                    let response = JSON.parse(req.responseText);
+                    todoList = response.record.map(todo => new TodoItem({
+                        ...todo,
+                        dueDate: new Date(todo.dueDate)
+                    }));
+                    updateTodoList();
+                }
+            } else {
+                console.error(`Request failed: ${req.status} ${req.statusText}`);
             }
         }
     };
 
-    req.open("GET", "https://api.jsonbin.io/v3/b/68f38bbcd0ea881f40a9e1cd/latest", true);
-    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
-    req.send();
-}
-
-getTodos();
-
-let updateJSONBin = () => {
-    let req = new XMLHttpRequest();
-
-    req.onreadystatechange = () => {
-    if (req.readyState == XMLHttpRequest.DONE) {
-        console.log(req.responseText);
+    if (method === "PUT") {
+        req.send(body);
+    } else {
+        req.send();
     }
-    };
+};
 
-    req.open("PUT", "https://api.jsonbin.io/v3/b/68f38bbcd0ea881f40a9e1cd", true);
-    req.setRequestHeader("Content-Type", "application/json");
-    req.setRequestHeader("X-Master-Key", "$2a$10$JyiWr4LNEJlpTsDbR2j9SuaRlznciAZmHm/uKAYs2Ijnd6ceaM3TG");
-    req.send('' + JSON.stringify({ record: todoList }));
-}
+fetchJSON("GET", null);
 
 let updateTodoList = () => {
     const todoListDiv = document.querySelector(".todoListView");
@@ -115,9 +115,8 @@ let updateTodoList = () => {
         }
     }
 
-    window.localStorage.setItem("todos", JSON.stringify(todoList));
+    fetchJSON("PUT", JSON.stringify(todoList));
 };
-
 
 let deleteTodo = (todo) => {
     const index = todoList.indexOf(todo);
@@ -146,5 +145,3 @@ let addTodo = () => {
 }
 
 updateTodoList();
-
-
