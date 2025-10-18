@@ -79,7 +79,8 @@ fetchJSON("GET", null);
 let updateTodoList = () => {
     const todoListBody = document.querySelector(".todoListBody");
     const filterInput = document.querySelector("#inputSearch");
-    filterInput.addEventListener("input", updateTodoList);
+    const filterFromDate = document.querySelector("#filterFromDate");
+    const filterToDate = document.querySelector("#filterToDate");
     
     let createItem = (todo) => {
         const newTr = document.createElement("tr");
@@ -94,15 +95,19 @@ let updateTodoList = () => {
             newTr.appendChild(newTd);
         }
 
-        const newDeleteButton = document.createElement("input");
+        const newDeleteButton = document.createElement("button");
         newDeleteButton.type = "button";
-        newDeleteButton.value = "Delete";
+        newDeleteButton.className = "btn btn-danger btn-sm";
+        newDeleteButton.innerHTML = '<i class="bi bi-trash"></i> Delete';
         newDeleteButton.addEventListener("click",
             function () {
                 deleteTodo(todo);
             });
 
-        newTr.appendChild(newDeleteButton);
+        const actionCell = document.createElement("td");
+        actionCell.className = "text-center";
+        actionCell.appendChild(newDeleteButton);
+        newTr.appendChild(actionCell);
         todoListBody.appendChild(newTr);
     }
 
@@ -111,16 +116,29 @@ let updateTodoList = () => {
     }
 
     for (let todo of todoList) {
-        if (filterInput.value == "") {
+        let matchesSearch = filterInput.value === "" || (todo.title.includes(filterInput.value) || todo.description.includes(filterInput.value));
+        let fromDate = filterFromDate.value ? new Date(filterFromDate.value) : null;
+        let toDate = filterToDate.value ? new Date(filterToDate.value) : null;
+        let matchesDate = true;
+        if (fromDate && todo.dueDate < fromDate) matchesDate = false;
+        if (toDate && todo.dueDate > toDate) matchesDate = false;
+        if (matchesSearch && matchesDate) {
             createItem(todo);
-        } else {
-            if ((todo.title.includes(filterInput.value)) ||
-                (todo.description.includes(filterInput.value))) {
-                createItem(todo);
-            }
         }
     }
 };
+
+let createdFilterListener = () => {
+    const filterInput = document.querySelector("#inputSearch");
+    const filterFromDate = document.querySelector("#filterFromDate");
+    const filterToDate = document.querySelector("#filterToDate");
+    
+    filterInput.addEventListener("input", updateTodoList);
+    filterFromDate.addEventListener("input", updateTodoList);
+    filterToDate.addEventListener("input", updateTodoList);
+};
+
+createdFilterListener();
 
 let deleteTodo = (todo) => {
     const index = todoList.indexOf(todo);
@@ -133,13 +151,12 @@ let deleteTodo = (todo) => {
 
 let addTodo = () => {
     const form = document.querySelector(".todoFormView form");
-    const { inputTitle, inputDescription, inputPlace, inputCategory, inputDate } = form.elements;
+    const { inputTitle, inputDescription, inputPlace, inputDate } = form.elements;
 
     const newTodoItem = new TodoItem({
         title: inputTitle.value,
         description: inputDescription.value,
         place: inputPlace.value,
-        category: inputCategory.value,
         dueDate: new Date(inputDate.value)
     });
 
@@ -147,6 +164,16 @@ let addTodo = () => {
     form.reset();
     updateTodoList();
     fetchJSON("PUT", JSON.stringify(todoList));
+    
+    confetti({
+        particleCount: 500,
+        spread: 360,
+        origin: { y: 0.6 },
+        angle: 90,
+        startVelocity: 100,
+        gravity: 0.5,
+        ticks: 200
+    });
 }
 
 updateTodoList();
