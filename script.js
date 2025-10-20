@@ -81,7 +81,7 @@ let fetchJSON = (method, body) => {
 fetchJSON("GET", null);
 
 let getCategoryFromLLM = async (title, description) => {
-    if (title === undefined || title === null || description === undefined || description === null) {
+    if (!title || !description) {
         console.error("Title or description is missing.");
         return null;
     }
